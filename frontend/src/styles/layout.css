@@ -1,0 +1,11 @@
+.main-content {
+  padding: 2rem 0;
+  min-height: calc(100vh - 60px);
+}
+
+.error {
+  color: var(--danger-color);
+  padding: 2rem;
+  text-align: center;
+  font-size: 1.125rem;
+}
