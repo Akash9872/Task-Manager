@@ -114,6 +114,32 @@
   transition: all 0.2s ease;
 }
 
+.text-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.notification-item {
+  border-left-color: var(--info-color);
+}
+
+.badge-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--secondary-color);
+  color: white;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
 .task-item:hover {
   box-shadow: var(--shadow-md);
 }

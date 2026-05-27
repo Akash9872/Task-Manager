@@ -23,6 +23,8 @@ const Navbar = () => {
           <div className="nav-menu">
             <Link to="/dashboard" className="nav-link">Dashboard</Link>
             <Link to="/projects" className="nav-link">Projects</Link>
+            <Link to="/notifications" className="nav-link">Notifications</Link>
+            <Link to="/calendar" className="nav-link">Calendar</Link>
           </div>
         )}
 

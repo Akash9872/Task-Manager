@@ -43,6 +43,27 @@ const getDashboard = async (req, res) => {
       new Date(t.dueDate) >= now && t.status !== 'Completed'
     );
 
+    const completionRate = taskStats.total
+      ? Math.round((taskStats.completed / taskStats.total) * 100)
+      : 0;
+
+    const priorityStats = {
+      high: allTasks.filter((t) => t.priority === 'High').length,
+      medium: allTasks.filter((t) => t.priority === 'Medium').length,
+      low: allTasks.filter((t) => t.priority === 'Low').length,
+    };
+
+    const recentActivity = allTasks
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      .slice(0, 5)
+      .map((task) => ({
+        id: task._id,
+        title: task.title,
+        status: task.status,
+        project: task.project.name,
+        updatedAt: task.updatedAt,
+      }));
+
     res.json({
       projectCount: projects.length,
       myTasks,
@@ -50,10 +71,48 @@ const getDashboard = async (req, res) => {
       overdueTasks,
       upcomingTasks,
       recentProjects: projects.slice(0, 5),
+      completionRate,
+      priorityStats,
+      recentActivity,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-module.exports = { getDashboard };
+const getCalendar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const projects = await Project.find({
+      $or: [
+        { admin: userId },
+        { members: userId },
+      ],
+    });
+
+    const projectIds = projects.map((project) => project._id);
+    const tasks = await Task.find({
+      project: { $in: projectIds },
+      dueDate: { $exists: true },
+    }).populate('project assignedTo');
+
+    const calendarTasks = tasks
+      .filter((task) => task.dueDate)
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .map((task) => ({
+        id: task._id,
+        title: task.title,
+        dueDate: task.dueDate,
+        project: task.project.name,
+        status: task.status,
+        priority: task.priority,
+        assignedTo: task.assignedTo ? task.assignedTo.name : null,
+      }));
+
+    res.json({ calendarTasks });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { getDashboard, getCalendar };

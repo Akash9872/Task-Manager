@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -32,9 +31,7 @@ const LoginPage = () => {
         email: email.trim().toLowerCase(),
         password,
       });
-      flushSync(() => {
-        login(response.data.user, response.data.token);
-      });
+      login(response.data.user, response.data.token);
       navigate('/dashboard', { replace: true });
     } catch (err) {
       const msg = err.response?.data?.error;

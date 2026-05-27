@@ -31,6 +31,13 @@ A professional team collaboration application for managing projects and tasks wi
 - Set due dates and priority levels
 - Update task status in real-time
 - Delete completed tasks
+- Upload task attachments and share files
+
+### Collaboration & Productivity
+- Project-level chat for team discussion
+- User notifications for deadlines and assignments
+- Calendar view for task deadlines and planning
+- Analytics metrics for completion rates and priorities
 
 ## 🛠️ Tech Stack
 
@@ -140,6 +147,7 @@ Team Task Manager/
 │   │   │   ├── LoginPage.jsx
 │   │   │   ├── SignupPage.jsx
 │   │   │   ├── DashboardPage.jsx
+│   │   │   ├── NotificationsPage.jsx
 │   │   │   ├── ProjectsPage.jsx
 │   │   │   └── ProjectDetailPage.jsx
 │   │   ├── components/      # Reusable components
@@ -176,9 +184,24 @@ Team Task Manager/
 - `POST /api/tasks` - Create new task
 - `PUT /api/tasks/:id` - Update task
 - `DELETE /api/tasks/:id` - Delete task
+- `POST /api/tasks/:id/attachments` - Upload task attachments
+- `GET /api/tasks/:id/attachments` - List task attachments
+
+### Collaboration
+- `GET /api/chat/:projectId/messages` - Get project chat messages
+- `POST /api/chat/:projectId/messages` - Send chat message
+- `GET /api/notifications` - Get user notifications
 
 ### Dashboard
 - `GET /api/dashboard` - Get dashboard statistics
+- `GET /api/dashboard/calendar` - Get calendar tasks and schedule data
+
+### Frontend Routes
+- `/dashboard` - Main dashboard
+- `/notifications` - Dedicated notifications panel
+- `/projects` - Project list
+- `/projects/:id` - Project detail and chat
+- `/calendar` - Task calendar view
 
 ## 🔑 Key Features Explained
 

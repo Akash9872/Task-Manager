@@ -151,9 +151,70 @@ const deleteTask = async (req, res) => {
   }
 };
 
+const uploadTaskAttachment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const task = await Task.findById(id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const project = await Project.findById(task.project);
+    if (!userHasProjectAccess(project, userId)) {
+      return res.status(403).json({ error: 'Not authorized to upload attachments' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'File is required' });
+    }
+
+    const attachment = {
+      filename: req.file.originalname,
+      url: `/uploads/${req.file.filename}`,
+      uploadedBy: userId,
+      uploadedAt: Date.now(),
+    };
+
+    task.attachments = task.attachments || [];
+    task.attachments.push(attachment);
+    task.updatedAt = Date.now();
+    await task.save();
+    await task.populate('attachments.uploadedBy project assignedTo createdBy');
+
+    res.status(201).json({ message: 'Attachment uploaded', attachment });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getTaskAttachments = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const task = await Task.findById(id).populate('project assignedTo createdBy');
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const project = await Project.findById(task.project);
+    if (!userHasProjectAccess(project, userId)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    res.json({ attachments: task.attachments || [] });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = { 
   createTask, 
   getProjectTasks, 
   updateTask, 
-  deleteTask 
+  deleteTask,
+  uploadTaskAttachment,
+  getTaskAttachments,
 };

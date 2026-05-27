@@ -5,7 +5,14 @@ const API_URL =
 
 const api = axios.create({
   baseURL: API_URL,
+  headers: {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+  },
 });
+
+api.defaults.headers.common.Accept = 'application/json';
+api.defaults.headers.post['Content-Type'] = 'application/json';
 
 // Add token to requests
 api.interceptors.request.use((config) => {
@@ -62,6 +69,29 @@ export const taskService = {
 
 export const dashboardService = {
   getDashboard: () => api.get('/dashboard'),
+  getCalendar: () => api.get('/dashboard/calendar'),
+};
+
+export const notificationService = {
+  getNotifications: () => api.get('/notifications'),
+};
+
+export const chatService = {
+  getMessages: (projectId) => api.get(`/chat/${projectId}/messages`),
+  sendMessage: (projectId, content) => api.post(`/chat/${projectId}/messages`, { content }),
+};
+
+export const attachmentService = {
+  upload: (taskId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/tasks/${taskId}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  getAttachments: (taskId) => api.get(`/tasks/${taskId}/attachments`),
 };
 
 export default api;

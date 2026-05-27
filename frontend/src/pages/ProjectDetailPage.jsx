@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { projectService, taskService } from '../services/api';
+import { projectService, taskService, chatService, attachmentService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import '../styles/project-detail.css';
 
@@ -22,9 +22,14 @@ const ProjectDetailPage = () => {
   });
   const [memberEmail, setMemberEmail] = useState('');
   const [memberLoading, setMemberLoading] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [attachments, setAttachments] = useState({});
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchProjectData();
+    fetchChat();
   }, [id]);
 
   const fetchProjectData = async () => {
@@ -35,11 +40,34 @@ const ProjectDetailPage = () => {
       ]);
       setProject(projectRes.data);
       setTasks(tasksRes.data);
+
+      const attachmentsMap = {};
+      await Promise.all(
+        tasksRes.data.map(async (task) => {
+          try {
+            const attachmentsRes = await attachmentService.getAttachments(task._id);
+            attachmentsMap[task._id] = attachmentsRes.data.attachments || [];
+          } catch (err) {
+            attachmentsMap[task._id] = [];
+          }
+        })
+      );
+      setAttachments(attachmentsMap);
+
       setError('');
     } catch (err) {
       setError('Failed to load project');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchChat = async () => {
+    try {
+      const response = await chatService.getMessages(id);
+      setChatMessages(response.data);
+    } catch (err) {
+      console.error('Failed to load chat messages', err);
     }
   };
 
@@ -116,6 +144,31 @@ const ProjectDetailPage = () => {
       fetchProjectData();
     } catch (err) {
       setError('Failed to delete task');
+    }
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    try {
+      await chatService.sendMessage(id, chatInput.trim());
+      setChatInput('');
+      fetchChat();
+    } catch (err) {
+      setError('Failed to send message');
+    }
+  };
+
+  const handleUploadAttachment = async (taskId, file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      await attachmentService.upload(taskId, file);
+      fetchProjectData();
+    } catch (err) {
+      setError('Failed to upload attachment');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -351,12 +404,63 @@ const ProjectDetailPage = () => {
                         <option>Completed</option>
                       </select>
                     </div>
+                    <div className="attachment-section mt-2">
+                      <strong>Attachments</strong>
+                      <ul className="attachment-list">
+                        {(attachments[task._id] || []).map((attachment) => (
+                          <li key={attachment.url}>
+                            <a href={attachment.url} target="_blank" rel="noreferrer">
+                              {attachment.filename}
+                            </a>
+                          </li>
+                        ))}
+                        {!(attachments[task._id] || []).length && (
+                          <li className="text-muted">No attachments yet.</li>
+                        )}
+                      </ul>
+                      <label className="upload-label">
+                        Upload file
+                        <input
+                          type="file"
+                          onChange={(e) => handleUploadAttachment(task._id, e.target.files?.[0])}
+                          disabled={uploading}
+                        />
+                      </label>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="chat-section card">
+        <h3>Project Chat</h3>
+        <div className="chat-messages">
+          {chatMessages.length === 0 ? (
+            <div className="text-muted">Start a conversation with your team.</div>
+          ) : (
+            chatMessages.map((message) => (
+              <div key={message._id} className="chat-message">
+                <div className="chat-message-user">{message.user.name}</div>
+                <div>{message.content}</div>
+                <div className="chat-message-time text-muted">
+                  {new Date(message.createdAt).toLocaleString()}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        <form onSubmit={handleSendMessage} className="chat-form">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="Write a message to the team"
+          />
+          <button type="submit" className="btn btn-primary btn-sm">Send</button>
+        </form>
       </div>
     </div>
   );

@@ -8,6 +8,8 @@ import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
+import CalendarPage from './pages/CalendarPage';
+import NotificationsPage from './pages/NotificationsPage';
 import { useAuth } from './context/AuthContext';
 
 function RootRedirect() {
@@ -50,6 +52,22 @@ function App() {
               element={
                 <PrivateRoute>
                   <ProjectDetailPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/calendar"
+              element={
+                <PrivateRoute>
+                  <CalendarPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <PrivateRoute>
+                  <NotificationsPage />
                 </PrivateRoute>
               }
             />

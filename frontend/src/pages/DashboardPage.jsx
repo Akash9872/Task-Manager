@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardService } from '../services/api';
+import { Link } from 'react-router-dom';
+import { dashboardService, notificationService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import '../styles/dashboard.css';
 
 const DashboardPage = () => {
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await dashboardService.getDashboard();
-        setDashboard(response.data);
+        const [dashboardRes, notificationsRes] = await Promise.all([
+          dashboardService.getDashboard(),
+          notificationService.getNotifications(),
+        ]);
+        setDashboard(dashboardRes.data);
+        setNotifications(notificationsRes.data.notifications || []);
       } catch (err) {
         setError('Failed to load dashboard');
       } finally {
@@ -51,6 +57,52 @@ const DashboardPage = () => {
               <div className="stat-value">{dashboard.taskStats.completed}</div>
               <div className="stat-label">Completed Tasks</div>
             </div>
+          </div>
+
+          {/* Performance Metrics */}
+          <div className="dashboard-section">
+            <h2>Performance Metrics</h2>
+            <div className="dashboard-stats grid grid-3">
+              <div className="stat-card">
+                <div className="stat-value">{dashboard.completionRate}%</div>
+                <div className="stat-label">Completion Rate</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{dashboard.priorityStats.high}</div>
+                <div className="stat-label">High Priority Tasks</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{dashboard.priorityStats.medium}</div>
+                <div className="stat-label">Medium Priority Tasks</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notifications */}
+          <div className="dashboard-section">
+            <div className="section-header flex-between">
+              <h2>Notifications</h2>
+              <Link to="/notifications" className="text-link">
+                View all
+              </Link>
+            </div>
+            {notifications.length === 0 ? (
+              <div className="empty-state">
+                <p>No new notifications right now.</p>
+              </div>
+            ) : (
+              <div className="task-list">
+                {notifications.slice(0, 5).map((notification, index) => (
+                  <div key={index} className="task-item notification-item">
+                    <div className="task-title">{notification.message}</div>
+                    <div className="task-meta">
+                      <span className="badge badge-secondary">{notification.type}</span>
+                      <span className="text-muted">{new Date(notification.date).toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Task Status Breakdown */}
